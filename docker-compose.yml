@@ -1,0 +1,177 @@
+services:
+    admin:
+        build:
+            context: .
+            dockerfile: ./apps/admin/Dockerfile
+            target: development
+        container_name: admin_service
+        command: npm run start:dev admin
+        ports:
+            - '3000:3000'
+        env_file:
+            - ./apps/admin/.env
+        depends_on:
+            - rabbitmq
+            - mysql_db
+            - mongo_db
+        networks:
+            - micro_services
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+    auth:
+        build:
+            context: .
+            dockerfile: ./apps/auth/Dockerfile
+            target: development
+        container_name: auth_service
+        command: npm run start:dev auth
+        ports:
+            - '3001:3001'
+        env_file:
+            - ./apps/auth/.env
+        depends_on:
+            - rabbitmq
+            - mysql_db
+            - mongo_db
+            - admin
+        networks:
+            - micro_services
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+    products:
+        build:
+            context: .
+            dockerfile: ./apps/products/Dockerfile
+            target: development
+        command: npm run start:dev products
+        container_name: products_service
+        env_file:
+            - ./apps/products/.env
+        depends_on:
+            - rabbitmq
+            - mysql_db
+            - mongo_db
+            - auth
+            - admin
+        ports:
+            - '3002:3002'
+        networks:
+            - micro_services
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+    orders:
+        build:
+            context: .
+            dockerfile: ./apps/orders/Dockerfile
+            target: development
+        command: npm run start:dev orders
+        container_name: orders_service
+        env_file:
+            - ./apps/orders/.env
+        depends_on:
+            - rabbitmq
+            - mysql_db
+            - mongo_db
+            - auth
+            - admin
+            - products
+        ports:
+            - '3003:3003'
+        networks:
+            - micro_services
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+    billing:
+        build:
+            context: .
+            dockerfile: ./apps/billing/Dockerfile
+            target: development
+        command: npm run start:dev billing
+        container_name: billing_service
+        env_file:
+            - ./apps/billing/.env
+        depends_on:
+            - rabbitmq
+            - mysql_db
+            - mongo_db
+            - auth
+            - admin
+            - products
+            - orders
+        networks:
+            - micro_services
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+    poc:
+        build:
+            context: .
+            dockerfile: ./apps/poc/Dockerfile
+            target: development
+        command: npm run start:dev poc
+        container_name: poc_service
+        ports:
+            - '3005:3005'
+        env_file:
+            - ./apps/poc/.env
+        depends_on:
+            - rabbitmq
+            - mysql_db
+            - mongo_db
+            - admin
+            - auth
+            - products
+            - orders
+            - billing
+        networks:
+            - micro_services
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+    rabbitmq:
+        image: rabbitmq
+        container_name: rabbitmq_message_queue
+        ports:
+            - '5672:5672'
+        networks:
+            - micro_services
+    mysql_db:
+        image: mysql
+        container_name: mysql_db
+        env_file: /.env
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+            MYSQL_DATABASE: $MYSQL_DATABASE
+            MYSQL_ROOT_PASSWORD: $MYSQL_PASSWORD
+            MYSQL_ALLOW_EMPTY_PASSWORD: yes
+        ports:
+            - '3309:3306'
+        volumes:
+            - mysql:/var/lib/mysql
+            - mysql_config:/etc/mysql
+        networks:
+            - micro_services
+    mongo_db:
+        container_name: mongo_db
+        image: mongo
+        env_file: /.env
+        ports:
+            - '27020:27017'
+        volumes:
+            - mongodb:/data/db
+        networks:
+            - micro_services
+networks:
+    micro_services:
+        driver: bridge
+
+volumes:
+    mysql:
+    mysql_config:
+
+    mongodb:
+        driver: local
