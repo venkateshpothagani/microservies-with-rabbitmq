@@ -26,13 +26,13 @@ jobs:
       - run:
           command: npm run build
           name: Run build
-  docker-build:
-    executor: docker/docker
-    steps:
-      - checkout
-      - run:
-          command: docker compose build
-          name: Docker compose build
+  # docker-build:
+  #   executor: docker/docker
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         command: docker compose build
+  #         name: Docker compose build
   # docker-push:
   #     executor: node/default
   #     steps:
@@ -69,7 +69,7 @@ workflows:
     jobs:
       - app-test
       - app-build
-      - docker-build
+      # - docker-build
       # - docker-push
       # - aws-ecr/build-and-push-image:
       #       repo: "${MY_APP_PREFIX}"
