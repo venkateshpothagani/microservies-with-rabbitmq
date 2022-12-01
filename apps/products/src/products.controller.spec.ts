@@ -28,7 +28,7 @@ describe('ProductsController', () => {
 		productsController = app.get<ProductsController>(ProductsController);
 	});
 	it('is get function return valid response', async () => {
-		expect(await productsController.get()).toStrictEqual(await product());
+		expect(await productsController.get()).toStrictEqual([await product()]);
 	});
 
 	it('is add function return valid response', async () => {
